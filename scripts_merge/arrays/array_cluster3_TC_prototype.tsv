@@ -1,0 +1,7 @@
+filename	pheno	build	path
+TC_INV_EUR_HRC_1KGP3_others_ALL.meta.singlevar.results.gz	TC_GLGC_2021	hg19	/mnt/lustre/scratch/nlsas/home/csic/gpo/olg/ccs/DATA/GWAS_data_diet/Lipids/
+MAGIC1000G_2hGlu_EUR.tsv.gz	2hGlu_gluc_traits_NatGen_2021	hg19	/mnt/lustre/scratch/nlsas/home/csic/gpo/olg/ccs/DATA/GWAS_data_diet/Glucemic_traits/
+LDL_INV_EUR_HRC_1KGP3_others_ALL.meta.singlevar.results.gz	LDL_GLGC_2021	hg19	/mnt/lustre/scratch/nlsas/home/csic/gpo/olg/ccs/DATA/GWAS_data_diet/Lipids/
+nonHDL_INV_EUR_HRC_1KGP3_others_ALL.meta.singlevar.results.gz	nonHDL_GLGC_2021	hg19	/mnt/lustre/scratch/nlsas/home/csic/gpo/olg/ccs/DATA/GWAS_data_diet/Lipids/
+GCST90269542.tsv.gz	Omega_6_BioPsych_2023	hg19	/mnt/lustre/scratch/nlsas/home/csic/gpo/olg/ccs/DATA/GWAS_data_diet/Metabolites/
+GCST90269541.tsv.gz	Omega_3_BioPsych_2023	hg19	/mnt/lustre/scratch/nlsas/home/csic/gpo/olg/ccs/DATA/GWAS_data_diet/Metabolites/

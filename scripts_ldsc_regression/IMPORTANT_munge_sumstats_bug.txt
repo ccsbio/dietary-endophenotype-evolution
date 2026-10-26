@@ -1,0 +1,41 @@
+# BUG: extremely small p-values caused the p-value column to be rejected as non-numeric.
+# SOLUTION: remove these SNPs from the ldsc regression
+
+# GutHub user explanation to bug solution
+# The way LD score regression works is to look at how a SNP's LD score (based on how many other SNPs that SNP tags) predicts its chi-square test statistic. 
+# Non-causal SNPs in LD with large numbers of other SNPs are more likely to happen to tag a causal SNP and have an inflated test statistic as a result. 
+# So it's the large numbers of SNPs with mildly inflated test statistics that make LD score regression work, not the small number that are extremely significant.
+# Extremely significant SNPs are usually excluded by LD Score regression because they have the potential to be highly-influential outliers (see chisq_max in ldscore/sumstats.py ). 
+# So it doesn't matter if munge_sumstats.py excludes them, because the regression would have excluded them anyway.
+# Even if you were to override that behavior and force LD Score regression to include highly-significant SNPs, you still wouldn't want to include SNPs with edited p-values. 
+# Picture a regression line on an X vs. Y scatter plot, where each dot is a SNP, X is the SNP's LD score, and Y is its chi-square test statistic from GWAS (remember, the lower the p-value the higher the chi-square). 
+# If the p-values of extremely significant SNPs were edited to make them less significant, that gives them a lower chi-square value than they're supposed to have. 
+# It would be like dragging some of the dots on the scatter plot downward, and could lead to inaccurate estimation of the slope and intercept of the line.
+
+# Github issue: https://github.com/bulik/ldsc/issues/144
+
+# Python code for manual modification of munge_sumstats.py:
+# REMOVE line 245:
+dat.columns = map(lambda x: convert_colname[x], dat.columns)
+# INSERT
+# Code lines must correspond to munge_sumstats.py code lines 240-248
+        dat.columns = map(lambda x: convert_colname[x], dat.columns)
+        if dat.P.dtype == "object":
+                numericP = pd.to_numeric(dat.P,errors='coerce')
+                checkvals = dat.P[numericP.isnull() & ~dat.P.isnull()]
+                if checkvals.str.contains("e-",case=False).all():
+                        dat.P = numericP
+                        msg = ' WARNING: {C} p-values too small to represent as floating-point have been set to NaN.'
+                        log.log(msg.format(C=checkvals.size))
+
+# If you need further checks to see if pvals are being coerced to NaN values in the pandas version being used, you can add the following
+# This check also finds SNPs with the P out of bounds, because this fix can still pass some of the small p.values (ex: 3.08256e-776 being read as 0.0). In this case, filter_pvals will filter them since (P > 0 & P <= 1)
+                print('Null')
+                print(dat.P[numericP.isnull()].size)
+                print(dat.P[numericP.isnull()])
+                bounds = (numericP > 0) & (numericP <= 1)
+                if any(bounds == False):
+                        print(numericP[bounds == False])
+                        print(dat.loc[bounds == False, 'SNP'])
+
+

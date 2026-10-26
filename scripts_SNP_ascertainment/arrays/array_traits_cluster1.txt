@@ -1,0 +1,9 @@
+whradjbmi_GIANT
+HDL_GLGC_2021
+Liver_ALT_NatCom_2021
+Liver_GGT_NatCom_2021
+HbA1c_gluc_traits_NatGen_2021
+FI_gluc_traits_NatGen_2021
+Vit_D_NatCom_2020
+meta_RG_and_FG_NatCom_2023
+logTG_GLGC_2021

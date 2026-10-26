@@ -1,0 +1,39 @@
+2hGlu_gluc_traits_NatGen_2021_rsID_merged.tsv.gz	sample_size	effect_allele	other_allele	beta	0	p_value	
+FG_gluc_traits_NatGen_2021_rsID_merged.tsv.gz	sample_size	effect_allele	other_allele	beta	0	p_value	
+FI_gluc_traits_NatGen_2021_rsID_merged.tsv.gz	sample_size	effect_allele	other_allele	beta	0	p_value	
+HbA1c_gluc_traits_NatGen_2021_rsID_merged.tsv.gz	sample_size	effect_allele	other_allele	beta	0	p_value	
+Liver_ALT_NatCom_2021_rsID_merged.tsv.gz	437438	effect_allele	other_allele	beta	0	p_value	variant_id
+Liver_FA_NatCom_2021_rsID_merged.tsv.gz	437438	effect_allele	other_allele	beta	0	p_value	variant_id
+Liver_GGT_NatCom_2021_rsID_merged.tsv.gz	437438	effect_allele	other_allele	beta	0	p_value	variant_id
+Prop_carb_NatHumBeha_2023_rsID_merged.tsv.gz	282271	Allele1	Allele2	Effect	0	P-value	MarkerName
+Prop_fat_NatHumBeha_2023_rsID_merged.tsv.gz	282271	Allele1	Allele2	Effect	0	P-value	MarkerName
+Prop_protein_NatHumBeha_2023_rsID_merged.tsv.gz	282271	Allele1	Allele2	Effect	0	P-value	MarkerName
+TSH_NatCom_2020_rsID_merged.tsv.gz	N	Allele1	Allele2	Effect	0	P-value	
+Acetate_BioPsych_2023_rsID_merged.tsv.gz	n	effect_allele	other_allele	beta	0	p_value	rs_id
+Acetoacetate_BioPsych_2023_rsID_merged.tsv.gz	n	effect_allele	other_allele	beta	0	p_value	rs_id
+DHA_BioPsych_2023_rsID_merged.tsv.gz	n	effect_allele	other_allele	beta	0	p_value	rs_id
+Omega_3_BioPsych_2023_rsID_merged.tsv.gz	n	effect_allele	other_allele	beta	0	p_value	rs_id
+Omega_6_BioPsych_2023_rsID_merged.tsv.gz	n	effect_allele	other_allele	beta	0	p_value	rs_id
+SBW_NatGen_2022_rsID_merged.tsv.gz	SampleSize	Allele1	Allele2	BETA	0	p_value	rsid
+MVPA_NatGen_2022_rsID_merged.tsv.gz	SampleSize	Allele1	Allele2	BETA	0	p_value	rsid
+LST_NatGen_2022_rsID_merged.tsv.gz	SampleSize	Allele1	Allele2	BETA	0	p_value	rsid
+HDL_GLGC_2021_rsID_merged.tsv.gz	N	ALT	REF	EFFECT_SIZE	0	pvalue	rsID
+LDL_GLGC_2021_rsID_merged.tsv.gz	N	ALT	REF	EFFECT_SIZE	0	pvalue	rsID
+TC_GLGC_2021_rsID_merged.tsv.gz	N	ALT	REF	EFFECT_SIZE	0	pvalue	rsID
+logTG_GLGC_2021_rsID_merged.tsv.gz	N	ALT	REF	EFFECT_SIZE	0	pvalue	rsID
+nonHDL_GLGC_2021_rsID_merged.tsv.gz	N	ALT	REF	EFFECT_SIZE	0	pvalue	rsID
+whradjbmi_GIANT_rsID_merged.tsv.gz	N	Tested_Allele	Other_Allele	BETA	0	P	SNP
+Vit_D_NatCom_2020_rsID_merged.tsv.gz	N	A1	A2	BETA	0	P	SNP
+meta_RG_and_FG_NatCom_2023_rsID_merged.tsv.gz	N	A1	A2	b	0	P	SNP
+eBMD_NatGen_2027_rsID_merged.tsv.gz	N	ALLELE1	ALLELE0	BETA	0	P	SNP,SNPID	
+BMI_mean_Science_2024_rsID_merged.tsv.gz	n	effect_allele	other_allele	beta	0	p_value	rsid
+BMI_max_Science_2024_rsID_merged.tsv.gz	n	effect_allele	other_allele	beta	0	p_value	rsid
+F-Acquired_food_liking_NatGen_2022_rsID_merged.tsv.gz	n	effect_allele	other_allele	beta	0	p_value	variant_id
+F-savory_food_liking_NatGen_2022_rsID_merged.tsv.gz	n	effect_allele	other_allele	beta	0	p_value	variant_id
+F-highly_Palatable_food_liking_NatGen_2022_rsID_merged.tsv.gz	n	effect_allele	other_allele	beta	0	p_value	variant_id
+F-vegetarian_food_liking_NatGen_2022_rsID_merged.tsv.gz	n	effect_allele	other_allele	beta	0	p_value	variant_id
+Fresh_fruit_diet_habit_NatCom_2020_rsID_merged.tsv.gz	447401	effect_allele	other_allele	beta	0	p_value	variant_id
+Alcohol_diet_habit_NatCom_2020_rsID_merged.tsv.gz	449210	effect_allele	other_allele	beta	0	p_value	variant_id
+Oily_fish_diet_habit_NatCom_2020_rsID_merged.tsv.gz	446854	effect_allele	other_allele	beta	0	p_value	variant_id
+Bread_diet_habit_NatCom_2020_rsID_merged.tsv.gz	444230	effect_allele	other_allele	beta	0	p_value	variant_id
+Added_salt_diet_habit_NatCom_2020_rsID_merged.tsv.gz	448890	effect_allele	other_allele	beta	0	p_value	variant_id
