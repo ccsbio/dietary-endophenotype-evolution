@@ -12,9 +12,9 @@ Preprint (bioRxiv): [10.64898/2026.10.27.762183](https://doi.org/10.64898/2026.1
 
 ## Release status and scope
 
-This independent publication repository contains selected scripts from the computational pipeline executed on the CESGA high-performance computing cluster. It documents the cluster analyses, their configured parameters, and their input/output relationships. Some intermediate files and results were subsequently processed locally in R; those local workflows are outside the present release.
+This independent publication repository contains selected scripts from the computational pipeline executed on the CESGA high-performance computing cluster. It documents the cluster analyses, their configured parameters, and their input/output relationships. Some intermediate files and results were subsequently processed locally; those local workflows are outside the present release.
 
-**This is a preliminary, partial code release. It has not been demonstrated to execute independently or reproduce the manuscript results from the contents supplied here.** Internal analytical functions, research datasets, intermediate products and generated results are omitted. Selected job arrays and supporting annotations are included; an array listing a file does not mean that the listed file is distributed.
+**This is a preliminary, partial code release. It has not been demonstrated to execute independently or reproduce the manuscript results from the contents supplied here.** Internal analytical functions, GWAS/genotype datasets, intermediate products and generated results are omitted. Selected job arrays, supporting annotations, sample lists and temporal-analysis metadata are included; an array listing a file does not mean that the listed file is distributed.
 
 The descriptions below are based on the included source and author clarification. Explicit script calls and file references establish configured relationships, but do not establish that every launcher was submitted with its present array range or that all file handoffs have been validated. The manuscript remains the reference for the scientific interpretation; this README does not assign unverified figure numbers to scripts.
 
@@ -23,6 +23,14 @@ The descriptions below are based on the included source and author clarification
 The existing organization is retained. Most folders correspond to one analytical component; R and Python entry points are generally called by shell launchers in the same component.
 
 ```text
+Allentoft_aDNA/                         Allentoft download, sample lists and QC
+Download_archaic_genomes/               Vindija download
+Download_human_variation_data_1000G_phase3_hg19/
+                                       1000G download, population panel and EUR list
+SNPs_linked_to_genes_Allentoft/          Gene-linked null-set preparation
+  scripts_subset_SNPs_linked_to_genes/   GENCODE annotation and gene/SNP proximity
+  scripts_subset_Allentoft/             Allentoft null-set VCF preparation
+  scripts_1000G_vcf_subset/              1000G annotations for the gene-linked set
 scripts_ldsc_regression/                 GWAS preparation and pairwise LDSC
   Example_arrays/                       GWAS and LDSC job specifications
   python_scripts/                       Genome-build conversion entry point
@@ -41,6 +49,7 @@ scripts_SNP_ascertainment/              Allele matching, PLINK clumping, diction
   python_scripts/
 scripts_proportion_risk_alleles/Allentoft/
   python_scripts/                       Proportions and temporal statistics
+  metadata_samples_trend_analysis/       Metadata for 946 temporal-analysis samples
 scripts_null_distribution_linked_SNPs/  Frequency-matched, gene-linked null analyses
   arrays_clusters/                      Configured trait selections
   python_scripts/
@@ -66,6 +75,10 @@ flowchart TD
     GA -. Cluster post-refinement and specification .-> MERGE[Cluster-specific GWAS merging]
     GWAS --> MERGE
     MERGE --> BED[Cluster SNP BED files]
+    RAWA[Allentoft download] --> QC[QC using the 967-sample EUR list]
+    QC --> ADNA
+    RAWK[1000 Genomes download and EUR sample list] --> KG
+    RAWV[Vindija download] --> VIND
     BED --> ADNA[Allentoft VCF subsets]
     BED -. BED staging .-> KG[1000 Genomes VCF subsets and EUR processing]
     BED -. BED staging .-> VIND[Vindija VCF subsets]
@@ -77,7 +90,16 @@ flowchart TD
     ASC --> AF[Index SNP risk-allele frequency distribution]
     KG --> AF
     AF --> NULL[Gene-linked null PRS matched to the frequency distribution]
-    EXT[External gene-linked SNP set and Allentoft VCF] --> NULL
+    ANNO[GENCODE annotation and complex-region exclusion] --> NEAR[Gene and Allentoft SNP proximity]
+    QC --> NEAR
+    NEAR -. Final distance filtering outside this release .-> NSET[Gene-linked SNP BED]
+    NSET --> NVCF[Allentoft null-set VCF preparation]
+    QC --> NVCF
+    NSET --> KANNO[1000 Genomes null-set annotation preparation]
+    RAWK --> KANNO
+    KANNO -. Local addition of 1000G allele frequencies outside this release .-> NAF[Gene-linked SNP frequency table]
+    NVCF --> NULL
+    NAF --> NULL
     SEL --> NULL
     NULL --> NTAU[Aggregation and weighted tau from null PRS]
     TEMP --> NTAU
@@ -132,6 +154,23 @@ The configured groups use labels based on logTG, trunk fat percentage, total cho
 
 ### 4. Ancient and present-day VCF processing
 
+#### Downloads and Allentoft QC
+
+| Component | Included entry point | Inputs and products |
+| --- | --- | --- |
+| Allentoft download | [00.00.Download_aDNA_Denmark_imputed_chr1-22_VCF.sh](Allentoft_aDNA/00.00.Download_aDNA_Denmark_imputed_chr1-22_VCF.sh) | Downloads the 22 autosomal imputed VCFs, tabix indexes and source README from the configured ERDA archive to `DATA/ancient_DNA_Denmark/VCF/` |
+| Allentoft QC | [01.00.Quality_control_filters_EURsamples_Allentoft_imputed_chr1-22_VCF.sh](Allentoft_aDNA/01.00.Quality_control_filters_EURsamples_Allentoft_imputed_chr1-22_VCF.sh) | Uses the included chromosome array and 967-sample EUR list; writes chromosome VCFs under `VCF_EURsamples_after_QC_diploid_imputed/`, as consumed by subsequent subsetting |
+| 1000 Genomes download | [Download_hg37_vcf_phase3_chr1-22.sh](Download_human_variation_data_1000G_phase3_hg19/Download_hg37_vcf_phase3_chr1-22.sh) | Downloads the 22 Phase 3 autosomal VCFs from release `20130502` and the population panel to `DATA/1000G_human_variation_phase3/VCFs_1000G_phase3_hg19/` |
+| Vindija download | [00.01.Download_Vindija_chr1-22_VCF.sh](Download_archaic_genomes/00.01.Download_Vindija_chr1-22_VCF.sh) | Downloads the 22 `Vindija33.19/chr*_mq25_mapab100.vcf.gz` files and source README to `DATA/Archaic_genomes/Neanderthal/Vindija/` |
+
+The Allentoft QC command selects samples with `bcftools view -S`, applies `MAF >= 0.01 & INFO >= 0.8`, and passes the result through `bcftools +setGT` with `-t q -n . -e 'GP[*] >= 0.8'`. SNPs from both the 1000G MASK and the 1240K array are retained, subject to these QC criteria; this step does not restrict the input to one of the two sets. The script describes the data as diploid but contains no separate ploidy-selection command. The original imputation workflow is not included.
+
+The initial European subset used for Allentoft QC contains 967 samples, including five from the Canary Islands, and is specified by [Sample_file_967_aDNA_EUR_ok.txt](Allentoft_aDNA/sample_files/Sample_file_967_aDNA_EUR_ok.txt). **Canary Islands samples are excluded from downstream temporal analyses through the 946-sample metadata table described below.** This later selection also restricts the analysis to the 400-15,000-year BP interval. The QC sample list and the downstream analysis metadata therefore serve different stages.
+
+The included [EUR.samples.txt](Download_human_variation_data_1000G_phase3_hg19/EUR.samples.txt) contains exactly the 503 samples labelled `EUR` in the included [1000G population panel](Download_human_variation_data_1000G_phase3_hg19/integrated_call_samples_v3.20130502.ALL.panel). The author generated the list from that panel; the generation command is not included. The EUR-processing launchers expect it in the downloaded VCF directory, so it must be staged there. Download URL accessibility has not been checked as part of this release.
+
+#### Cluster-specific VCF processing
+
 The branches operate on autosomal chromosome files, 1 through 22:
 
 | Component | Local sequence | Required inputs | Declared products |
@@ -140,7 +179,7 @@ The branches operate on autosomal chromosome files, 1 through 22:
 | [1000 Genomes](scripts_subset_1000G/) | `01.*` subsetting; `02.*` sorting/indexing; `03.*` concatenation; `04.*` EUR processing | Phase 3 hg19 VCFs, cluster BED files, chromosome list and `EUR.samples.txt` | Cluster VCFs and EUR subsets with recalculated tags and assigned variant IDs |
 | [Vindija](scripts_subset_vcf_archaics/) | `01.*` header preparation/subsetting; `02.*` sorting/indexing; `03.*` concatenation | Vindija VCFs, cluster BED files, included contig header and chromosome list | Cluster-specific sorted/indexed Vindija VCFs |
 
-The Allentoft source filenames identify preprocessed, diploid-imputed data and include QC labels such as `INFO_0.8`, `MAF_0.01` and `GP_0.8`. These scripts consume that previously prepared dataset; they do not implement its complete upstream QC or imputation workflow.
+The cluster-specific Allentoft scripts consume the QC outputs described above, whose filenames include `EUR_967samples_diploid_INFO_0.8_MAF_0.01_GP_0.8_missing`.
 
 BED creation is included under the Allentoft component. The 1000G and Vindija launchers expect BED files in their own configured directories; copying/staging these products across components is not automated here.
 
@@ -173,15 +212,29 @@ In [scripts_proportion_risk_alleles/Allentoft](scripts_proportion_risk_alleles/A
 - `02.*Launch_weighted_Tau_permutation_test*` calls [calculate_observed_weighted_or_regular_tau_and_null_distribution_proportion_risk_alleles_using_ancient_DNA_and_SNP_dict.py](scripts_proportion_risk_alleles/Allentoft/python_scripts/calculate_observed_weighted_or_regular_tau_and_null_distribution_proportion_risk_alleles_using_ancient_DNA_and_SNP_dict.py).
 - [prepare_df_all_traits_results_proportion_risk_alleles_clusters.sh](scripts_proportion_risk_alleles/Allentoft/prepare_df_all_traits_results_proportion_risk_alleles_clusters.sh) aggregates supplied proportion outputs.
 
-**Inputs:** sorted/indexed Allentoft VCFs, SNP dictionaries, included trait arrays, and an external metadata table containing `Sample_ID` and `Age.average`. Metadata membership controls which samples enter the temporal analysis.
+**Inputs:** sorted/indexed Allentoft VCFs, SNP dictionaries, included trait arrays, and the included [temporal-analysis metadata](scripts_proportion_risk_alleles/Allentoft/metadata_samples_trend_analysis/Metadata_Allentoft_EUR_samples_400-15KyearsBP_946indv_diploid_imputed_noCanary.tsv). The table contains `Sample_ID`, `Age.average`, `Latitude.ok`, `Longitude.ok` and `Cluster.group`. Its 946 unique sample IDs form a subset of the 962-sample no-Canary list; none of the five Canary Islands IDs occur. Recorded ages range from 465 to 14,800 years BP, within the configured 400-15,000-year interval. Metadata membership controls which samples enter the temporal analysis, while the input VCFs retain the earlier 967-sample selection. Preparation of this metadata table is not scripted in the release.
 
 **Products:** `Proportion_risk_allele_*.tsv`, `Presence_risk_allele_indep_*.tsv`, observed-tau logs, `Null_distribution_Kendall_tau_prop_risk_*.tsv`, permutation-test logs and aggregated proportion tables.
+
+Although Canary Islands samples are present in the initial European VCF subset, they are excluded when selecting samples for these temporal analyses using the metadata `Sample_ID` column. The null weighted-tau comparisons use the same no-Canary temporal metadata; retaining these samples in an upstream VCF does not include them in those downstream tests.
 
 Launchers enable weighted tau, using bin arguments start `400`, end `15000`, size `500`, and `--filt_outlier_bins_by_y 10000`. The exact weighting and outlier-bin behavior is delegated to internal methods; this argument alone should not be interpreted as a complete description of sample filtering. Permutations use 10,000 replicates and seed `3895725384`.
 
 The supplied BH-labelled selections in subsequent components identify configured downstream traits. The multiple-testing calculation and its test family are not implemented by an included script.
 
 ### 7. Gene-linked, allele-frequency-matched null analyses
+
+#### Gene-linked SNP set preparation
+
+[SNPs_linked_to_genes_Allentoft](SNPs_linked_to_genes_Allentoft/) contains the upstream preparation for a set of Allentoft SNPs near protein-coding regions and their 1000G frequency annotations:
+
+1. [download_GENCODE_release47_lift37_gene_anno.sh](SNPs_linked_to_genes_Allentoft/scripts_subset_SNPs_linked_to_genes/download_GENCODE_release47_lift37_gene_anno.sh) obtains `gencode.v47lift37.annotation.gff3.gz`. [create_bedfile_genes_from_gff3_using_filters.sh](SNPs_linked_to_genes_Allentoft/scripts_subset_SNPs_linked_to_genes/create_bedfile_genes_from_gff3_using_filters.sh) selects `gene` records with `gene_type=protein_coding` and `level` 2 or 3, converting GFF3 starts to BED coordinates.
+2. [00.01.Filter_complex_LD_regions_GENCODE_gene_annotation.sh](SNPs_linked_to_genes_Allentoft/scripts_subset_SNPs_linked_to_genes/00.01.Filter_complex_LD_regions_GENCODE_gene_annotation.sh) removes gene intervals overlapping the included [complex_regions.bed](SNPs_linked_to_genes_Allentoft/scripts_subset_SNPs_linked_to_genes/complex_regions.bed), using `bedtools intersect -v`.
+3. [01.01.Subset_SNPs_from_Allentoft_aDNA_linked_to_genes.sh](SNPs_linked_to_genes_Allentoft/scripts_subset_SNPs_linked_to_genes/01.01.Subset_SNPs_from_Allentoft_aDNA_linked_to_genes.sh) converts QC Allentoft variant positions to BED and runs `bedtools closest`, with genes as `-a` and SNPs as `-b`, writing per-chromosome proximity tables. This command contains no 50-kb cutoff. The final `SNPs_genome_wide_max50KB_linked_to_protein_coding_genes_GENCODEv47_hg19_levels2-3.bed` and its generation step are not included; the author indicates that distance filtering may have been performed locally in Python.
+4. The [Allentoft branch](SNPs_linked_to_genes_Allentoft/scripts_subset_Allentoft/) uses that final BED to subset the QC VCFs, sort/index chromosome products and concatenate/index `SNPs_linked_to_protein_coding_genes_aDNA_Allentoft_afterQC_all_chr_EUR_samples_sorted.vcf.gz`, at the path used by the null-simulation launchers.
+5. The [1000G branch](SNPs_linked_to_genes_Allentoft/scripts_1000G_vcf_subset/) intersects Phase 3 VCFs with the same BED and retains the first nine fields for annotation processing. The final null-set dataframe, `SNPs_linked_to_protein_coding_genes_Allentoft_AF_EUR.tsv`, was prepared on the author's local computer by adding 1000G allele frequencies to the selected gene-linked Allentoft SNPs. This local preparation code and the resulting table are not included in this release.
+
+#### Null simulations and temporal comparison
 
 [scripts_null_distribution_linked_SNPs](scripts_null_distribution_linked_SNPs/) contains:
 
@@ -192,7 +245,7 @@ The supplied BH-labelled selections in subsequent components identify configured
 
 For each trait, matching targets the empirical distribution of European risk-allele frequencies across its ascertained index SNPs. The entry point supplies the full table of individual `Risk_allele_AF` values to the internal matching function, rather than a single mean frequency. The matching implementation is omitted; exact matching behavior cannot be verified from this release alone. The historical argument name `--prototype_SNPs_file` refers to this index-SNP frequency table.
 
-The simulation launchers configure 1,000 replicates, seed `1234`, AF span `0.05`, and exclusion of target-trait-associated SNPs at `1e-05`. The null set is described by filenames and interfaces as SNPs within 50 kb of protein-coding genes. Construction of that set and its VCF is outside this release. The weighted-tau step uses the temporal bin and outlier arguments described above.
+The simulation launchers configure 1,000 replicates, seed `1234`, AF span `0.05`, and exclusion of target-trait-associated SNPs at `1e-05`. The target null set is described by filenames and interfaces as SNPs within 50 kb of protein-coding genes. Its preparation is only partially represented, as detailed above; final distance filtering and EUR frequency-table generation remain outside this release. The weighted-tau step uses the temporal bin and outlier arguments described above. The null weighted-tau launchers expect the temporal metadata under their own configured component path; staging the supplied table there is not automated.
 
 ### 8. Geographic variation in temporal trends
 
@@ -223,6 +276,8 @@ The launchers were configured for Bash, CESGA modules and SLURM. Many use Bash p
 | LD clumping | `plink/1.9b5` |
 
 Direct Python imports include pandas, NumPy and pysam, together with the internal modules listed below. R entry points load doParallel, doRNG, dplyr, tidyr and, for clustering, stringr; they also call foreach interfaces. Python and R package versions, LDSC revision, liftOver version and complete environment definitions are not pinned in this release. Dependencies of the omitted functions cannot be enumerated completely.
+
+In the gene-linked 1000G preparation branch, [02.01.Filtering_sample_genos_cols_per_chr_1000G_SNPs_linked_to_protein_coding_genes.sh](SNPs_linked_to_genes_Allentoft/scripts_1000G_vcf_subset/02.01.Filtering_sample_genos_cols_per_chr_1000G_SNPs_linked_to_protein_coding_genes.sh) and [03.01.Merge_1000G_ALL_chr_filtered_VCF_SNPs_linked_to_protein_coding_genes.sh](SNPs_linked_to_genes_Allentoft/scripts_1000G_vcf_subset/03.01.Merge_1000G_ALL_chr_filtered_VCF_SNPs_linked_to_protein_coding_genes.sh) contain no active module-loading commands. They require `bgzip` and the shell/text-processing utilities to be available in the execution environment.
 
 ### Command-line arguments
 
@@ -258,37 +313,20 @@ Both R runners require an output directory ending in `/`; several Python interfa
 
 Trait-clustering launchers configure k-medoids, population 400, mutation rate 0.2, 100 iterations, elitist reproduction, K2-K10 and 16 workers. Geographic launchers configure population 200, mutation rate 0.2, 100 iterations, tournament reproduction, tournament size 5 and 16 workers. The visible R runners do not set an explicit random seed; random-state handling inside omitted functions is not established here.
 
-SLURM requests range from `--mem=10000` to `--mem=150000`, with walltimes from one to nine hours. Parallel launchers commonly request 20 CPUs and pass 16 or 17 workers to the analysis. These are configured allocations, not measured minimum requirements or execution benchmarks. Input data and memory use vary by stage and trait.
+SLURM requests range from `--mem=5000` to `--mem=150000`, with walltimes from one to nine hours. Parallel launchers commonly request 20 CPUs and pass 16 or 17 workers to the analysis. These are configured allocations, not measured minimum requirements or execution benchmarks. Input data and memory use vary by stage and trait.
 
 ## Included specifications and omitted material
 
-Included specifications comprise GWAS merging/LDSC arrays, SNP-ascertainment trait lists, temporal-analysis arrays, downstream significant-trait arrays, the Allentoft cluster-to-BED array, complex-LD-region annotations, and the Vindija chromosome/contig support files.
-
-### Trait ID annotation alignment
-
-Journal/year annotations in the supplied arrays were checked against the `Trait ID` column of the author-provided `Diet_manuscript_supplementary_tables_1_2_3.xlsx`, sheet `Sup Table 1 - GWAS`. That workbook is not distributed in this repository. The following annotation corrections were applied consistently to GWAS merge phenotype labels, ascertainment trait lists, LDSC derived-file references, and downstream dictionary/trait references wherever they occurred:
-
-| Earlier label | Corrected Trait ID | Supplementary Table 1 cell |
-| --- | --- | --- |
-| `F-Acquired_food_liking_NatGen_2022` | `F-Acquired_food_liking_NatCom_2022` | B39 |
-| `F-savory_food_liking_NatGen_2022` | `F-savory_food_liking_NatCom_2022` | B40 |
-| `F-highly_Palatable_food_liking_NatGen_2022` | `F-highly_Palatable_food_liking_NatCom_2022` | B41 |
-| `F-vegetarian_food_liking_NatGen_2022` | `F-vegetarian_food_liking_NatCom_2022` | B42 |
-| `eBMD_NatGen_2027` | `eBMD_NatGen_2017` | B36 |
-| `Prop_carb_NatHumBeha_2023` | `Prop_carb_NatHumBeha_2022` | B18 |
-| `Prop_fat_NatHumBeha_2023` | `Prop_fat_NatHumBeha_2022` | B19 |
-| `Prop_protein_NatHumBeha_2023` | `Prop_protein_NatHumBeha_2022` | B20 |
-
-These edits preserve array row order, trait-name structure, marker counts, raw source filenames, thresholds and analytical code. A shortened identifier that omits the year is not treated as an error solely for that omission. Historical external artifacts may still use earlier labels in `.pkl`/derived filenames, merged-GWAS column suffixes or result metadata. They require a coordinated identifier migration before use with the corrected arrays; changing a filename alone does not update labels stored within a file. No external datasets, dictionaries or results were renamed or modified during this correction, and execution with those artifacts has not been verified.
+Included specifications comprise GWAS merging/LDSC arrays, SNP-ascertainment trait lists, temporal-analysis arrays, downstream significant-trait arrays, the Allentoft cluster-to-BED array, complex-LD-region annotations, and chromosome/contig support files. Included sample information comprises Allentoft sample lists, the 946-sample temporal metadata table, the 1000G population panel and its EUR sample list.
 
 The following components are not supplied:
 
 - Internal Python modules `merge_GWAS_phenos`, `work_vegeta` and `ancient_vegeta`, imported from the configured `vegeta_last_version` installation.
 - `Functions_GA_clustering_traits_by_kmedoids.R`, including the called `evolve.or.die.clusters.parallel.kmedoids` implementation.
 - `Functions_GA_geographic_trend.R`, including `evolve_or_die_geo_trends_across_time` and the geographic optimization details.
-- GWAS summary statistics; ancient, present-day and archaic VCFs/indexes; sample metadata and sample lists; gene-linked null SNP/frequency datasets.
+- GWAS summary statistics; ancient, present-day and archaic VCFs/indexes; gene-linked null SNP/frequency datasets. Sample information is limited to the lists, panel and temporal metadata identified above.
 - Intermediate merged statistics, BED/PLINK files, clumping results, SNP dictionaries, MDS/combined metadata tables, simulation products, analysis logs and final results.
-- Local R workflows for processing intermediate files/results; the MDS preparation, final cluster selection/export, multiple-testing processing and geographic input preparation are not reconstructed in this release.
+- Local workflows for processing intermediate files/results; the MDS preparation, final cluster selection/export, multiple-testing processing, geographic input preparation, final gene-distance filtering and null-set EUR frequency-table generation are not reconstructed in this release.
 - LDSC software and its installed modification, reference LD scores, HapMap3 allele list, liftOver executable/chains and complete software environments.
 
 These omissions must not be interpreted as instructions to recreate internal methods or substitute data. Sharing status must be assessed separately for each item.
@@ -296,7 +334,7 @@ These omissions must not be interpreted as instructions to recreate internal met
 ## Current limitations
 
 1. **External arrays:** six UKB lists referenced by LDSC are absent: `array_UKB_Anthropometric.txt`, `array_UKB_Metabolic.txt`, `array_UKB_Psychiatric.txt`, and their corresponding `_with_rsID.txt` lists. Four coordinate-parser lists are also absent: `array_parse_UKB_Ant.txt`, `array_parse_UKB_Met.txt`, `array_parse_UKB_Psyc.txt` and `array_parser_diet_composition.tsv`. Launchers point to their original CESGA data locations.
-2. **Other missing support files:** `ldsc_rsID_with_coords_list.tsv` is referenced by LDSC annotation scripts but not distributed. `chromosomes.txt` is included under `scripts_subset_vcf_archaics/`, but is absent at the separate paths expected by the Allentoft and 1000G sorting launchers. `EUR.samples.txt` and the temporal sample-metadata table are also external.
+2. **Support files and staging:** `ldsc_rsID_with_coords_list.tsv` is referenced by LDSC annotation scripts but not distributed. `chromosomes.txt` is included under `scripts_subset_vcf_archaics/` and the gene-linked Allentoft branch, but is absent at the separate paths expected by the cluster-specific Allentoft and 1000G sorting launchers. The included `EUR.samples.txt` must be staged in the configured 1000G data directory; the null weighted-tau launchers also expect a separate component-local copy of the supplied temporal metadata. Final gene-linked SNP BED and EUR frequency tables remain unavailable.
 3. **Original path assumptions:** absolute CESGA code, input, scratch, output and log locations remain in the scripts, along with `$HOME`, `$LUSTRE` and working-directory assumptions. Folder placement in this repository does not recreate those locations.
 4. **Unverified file handoffs:** Allentoft concatenation produces a `.sorted.vcf.gz` under `sorted/`, while initial GWAS-to-Allentoft matching references a differently located VCF without that suffix. The original staging relationship has not been established. Conditional `_dup_filt` outputs and BED staging also require the corresponding original products and provenance.
 5. **Job selection and orchestration:** some launchers retain partial or nonconsecutive SLURM array selections. They should not be interpreted as complete records of every original submission. There is no master dependency-aware submission script. Array row order controls trait/job selection; it is part of the interface.
@@ -305,6 +343,6 @@ These omissions must not be interpreted as instructions to recreate internal met
 
 ## Editorial review and additional material
 
-Requests for consideration of additional material should identify the relevant analytical component and files through the manuscript's editorial correspondence. This repository does not establish authorization to release the omitted internal modules, R functions, datasets, metadata or result files. Any provision would require confirmation by the authors of ownership, applicable sharing restrictions and specific release authorization. No availability-on-request commitment is made by this provisional release.
+Requests for consideration of additional material should identify the relevant analytical component and files through the manuscript's editorial correspondence. This repository does not establish authorization to release the omitted internal modules, R functions, datasets or result files. Any provision would require confirmation by the authors of ownership, applicable sharing restrictions and specific release authorization. No availability-on-request commitment is made by this provisional release.
 
 Please cite the [bioRxiv preprint](https://doi.org/10.64898/2026.10.27.762183) when referring to these analyses.

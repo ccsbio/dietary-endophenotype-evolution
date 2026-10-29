@@ -88,3 +88,9 @@ slurm-*
 ldsc_rsID_with_coords_list.tsv
 
 # TSV/TXT job arrays and complex_LD_regions_hg19_chr.tsv remain eligible.
+
+# Included annotation and temporal-analysis metadata
+!/SNPs_linked_to_genes_Allentoft/scripts_subset_SNPs_linked_to_genes/complex_regions.bed
+!/scripts_proportion_risk_alleles/Allentoft/metadata_samples_trend_analysis/
+/scripts_proportion_risk_alleles/Allentoft/metadata_samples_trend_analysis/*
+!/scripts_proportion_risk_alleles/Allentoft/metadata_samples_trend_analysis/Metadata_Allentoft_EUR_samples_400-15KyearsBP_946indv_diploid_imputed_noCanary.tsv

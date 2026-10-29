@@ -1,0 +1,11 @@
+# Check the counts for each type of gene
+zcat gencode.v47lift37.annotation.gff3.gz | awk -F'\t' '$3=="gene"{split($9,a,";"); for(i in a) if(a[i]~/^gene_type=/){sub("gene_type=","",a[i]); print a[i]}}' | sort | uniq -c | sort -nr
+
+# Check the counts for each type of gene + level of confidence (from 1 to 3 being 1 the lowest)
+zcat gencode.v47lift37.annotation.gff3.gz | awk -F'\t' '$3=="gene"{gt="."; lv=".";n=split($9,a,";");
+  for(i=1;i<=n;i++){
+    if(a[i]~/^gene_type=/){sub("gene_type=","",a[i]); gt=a[i]}
+    if(a[i]~/^level=/){sub("level=","",a[i]); lv=a[i]}
+  }
+  print gt"\tlevel_"lv
+}' | sort | uniq -c > type_of_genes_by_level_confidence.txt
