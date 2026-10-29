@@ -4,7 +4,7 @@ Code supporting the manuscript:
 
 **Beyond single-trait analysis: ancient genomes reveal coordinated evolution of dietary endophenotypes in Holocene Europe**
 
-Carla Casanova-Suarez, Karen Hardy and Oscar Lao.
+Carla Casanova-Suárez, Karen Hardy and Oscar Lao.
 
 Prepared for scientific review.
 
@@ -150,28 +150,28 @@ The sequence in [scripts_SNP_ascertainment](scripts_SNP_ascertainment/) is:
 
 | Prefix | Operation and analytical entry point | Products consumed downstream |
 | --- | --- | --- |
-| `00.*` | GWAS-to-Allentoft matching: `Merging_and_fixing_alleles_GWAS_to_Allentoft.py` | Matched GWAS tables |
-| `01.*` | 1000G matching: `Merging_alleles_GWAS_1000G_data_fix_VCF.py` | Updated GWAS tables with 1000G identifiers and filtered/sorted VCFs |
+| `00.*` | GWAS-to-Allentoft matching: [Merging_and_fixing_alleles_GWAS_to_Allentoft.py](scripts_SNP_ascertainment/python_scripts/Merging_and_fixing_alleles_GWAS_to_Allentoft.py) | Matched GWAS tables |
+| `01.*` | 1000G matching: [Merging_alleles_GWAS_1000G_data_fix_VCF.py](scripts_SNP_ascertainment/python_scripts/Merging_alleles_GWAS_1000G_data_fix_VCF.py) | Updated GWAS tables with 1000G identifiers and filtered/sorted VCFs |
 | `02.*` | PLINK binary-file preparation | `.bed`, `.bim` and `.fam` files |
 | `03.*.02` | Within-cluster trait-specific SNP selection and association-file creation: [Create_assoc_file_merged_GWAS_by_trait_for_clumping_with_plink_and_1000G_data.py](scripts_SNP_ascertainment/python_scripts/Create_assoc_file_merged_GWAS_by_trait_for_clumping_with_plink_and_1000G_data.py) | `.assoc` files containing SNPs uniquely associated with the target trait within its cluster at `1e-05` |
 | `04.*.02` | PLINK clumping | Parsed `.clumped` files |
-| `05.*` | `SNP_ascertainment_from_PLINK_clumping_and_fixed_GWAS_with_Allentoft_aDNA_by_trait_from_merge.py` | `.pkl` dictionaries of index SNPs and linked candidates, plus ascertainment logs |
+| `05.*` | [SNP_ascertainment_from_PLINK_clumping_and_fixed_GWAS_with_Allentoft_aDNA_by_trait_from_merge.py](scripts_SNP_ascertainment/python_scripts/SNP_ascertainment_from_PLINK_clumping_and_fixed_GWAS_with_Allentoft_aDNA_by_trait_from_merge.py) | `.pkl` dictionaries of index SNPs and linked candidates, plus ascertainment logs |
 
-The unique-SNP selection occurs in `Create_assoc_file_merged_GWAS_by_trait_for_clumping_with_plink_and_1000G_data.py`, before LD clumping. It extracts the p-value columns from the cluster-specific merged GWAS dataframe and calls the internal `number_of_unique_SNPs_associated_by_trait_and_pval_threshold` function. As clarified by the author, SNPs are selected for association with the target trait at `p < 1e-05` without association at that threshold with another trait in the same cluster dataframe. These represent **trait-specific within-cluster components**; uniqueness is assessed relative to the other traits in that cluster, not across all traits in the study. The internal selection function is not included in this release.
+The unique-SNP selection occurs in [Create_assoc_file_merged_GWAS_by_trait_for_clumping_with_plink_and_1000G_data.py](scripts_SNP_ascertainment/python_scripts/Create_assoc_file_merged_GWAS_by_trait_for_clumping_with_plink_and_1000G_data.py), before LD clumping. It extracts the p-value columns from the cluster-specific merged GWAS dataframe and calls the internal `number_of_unique_SNPs_associated_by_trait_and_pval_threshold` function. As clarified by the author, SNPs are selected for association with the target trait at `p < 1e-05` without association at that threshold with another trait in the same cluster dataframe. These represent **trait-specific within-cluster components**; uniqueness is assessed relative to the other traits in that cluster, not across all traits in the study. The internal selection function is not included in this release.
 
 Uniqueness is assessed at the analysis threshold, rather than inherited from the broader `1e-03` intermediate selection. Clumping and dictionary creation also use `1e-05`. References to `1e-03` in these launchers identify upstream merged GWAS/VCF products retained for threshold flexibility; the downstream association threshold remains `1e-05`. Here, index SNPs refers to the ascertained independent markers represented by the SNP-dictionary keys, distinct from the traits representing clusters in trait clustering.
 
 Clumping uses `--clump-p1 1e-05`, `--clump-p2 1e-05`, `--clump-r2 0.2`, `--clump-kb 500` and `--geno 0.8`. Dictionary creation supplies [complex_LD_regions_hg19_chr.tsv](scripts_SNP_ascertainment/complex_LD_regions_hg19_chr.tsv) to the internal QC function. The region table includes `chr`, `start`, `end` and `annotation`; its filtering implementation is in the omitted module.
 
-The four trait arrays are in `arrays/`. `select_traits_by_number_of_independent_positions.sh` selects entries with more than 20 independent positions from an ascertainment log; `prepare_array_with_SNP_dict_filenames_using_a_list_of_selected_traits.sh` creates dictionary/trait arrays from a supplied selection. These helpers require explicit command-line inputs.
+The four trait arrays are in `arrays/`. [select_traits_by_number_of_independent_positions.sh](scripts_SNP_ascertainment/select_traits_by_number_of_independent_positions.sh) selects entries with more than 20 independent positions from an ascertainment log; [prepare_array_with_SNP_dict_filenames_using_a_list_of_selected_traits.sh](scripts_SNP_ascertainment/prepare_array_with_SNP_dict_filenames_using_a_list_of_selected_traits.sh) creates dictionary/trait arrays from a supplied selection. These helpers require explicit command-line inputs.
 
 ### 6. Risk-allele proportions and temporal trends
 
 In [scripts_proportion_risk_alleles/Allentoft](scripts_proportion_risk_alleles/Allentoft/):
 
-- `01.*Launch_proportion_risk_alleles*` calls `calculate_proportion_risk_alleles_Allentoft_and_weighted_or_regular_tau_using_ancient_DNA_and_SNP_dict.py`.
-- `02.*Launch_weighted_Tau_permutation_test*` calls `calculate_observed_weighted_or_regular_tau_and_null_distribution_proportion_risk_alleles_using_ancient_DNA_and_SNP_dict.py`.
-- `prepare_df_all_traits_results_proportion_risk_alleles_clusters.sh` aggregates supplied proportion outputs.
+- `01.*Launch_proportion_risk_alleles*` calls [calculate_proportion_risk_alleles_Allentoft_and_weighted_or_regular_tau_using_ancient_DNA_and_SNP_dict.py](scripts_proportion_risk_alleles/Allentoft/python_scripts/calculate_proportion_risk_alleles_Allentoft_and_weighted_or_regular_tau_using_ancient_DNA_and_SNP_dict.py).
+- `02.*Launch_weighted_Tau_permutation_test*` calls [calculate_observed_weighted_or_regular_tau_and_null_distribution_proportion_risk_alleles_using_ancient_DNA_and_SNP_dict.py](scripts_proportion_risk_alleles/Allentoft/python_scripts/calculate_observed_weighted_or_regular_tau_and_null_distribution_proportion_risk_alleles_using_ancient_DNA_and_SNP_dict.py).
+- [prepare_df_all_traits_results_proportion_risk_alleles_clusters.sh](scripts_proportion_risk_alleles/Allentoft/prepare_df_all_traits_results_proportion_risk_alleles_clusters.sh) aggregates supplied proportion outputs.
 
 **Inputs:** sorted/indexed Allentoft VCFs, SNP dictionaries, included trait arrays, and an external metadata table containing `Sample_ID` and `Age.average`. Metadata membership controls which samples enter the temporal analysis.
 
@@ -185,10 +185,10 @@ The supplied BH-labelled selections in subsequent components identify configured
 
 [scripts_null_distribution_linked_SNPs](scripts_null_distribution_linked_SNPs/) contains:
 
-1. `00.*Launch_add_EUR_AF*` calls `Add_EUR_AF_from_1000G_ph3_hg19_using_SNP_dict_target_trait.py`, using SNP dictionaries and 1000G annotations to produce `SNPs_*_indpMarkers_with_EUR_AF_risk_alleles.tsv`. A separate cluster-1 negative-control annotation launcher is included; a complete downstream negative-control simulation sequence is not supplied.
-2. `01.*Launch_null_PRS*` calls `Null_distribution_PRS_SNPs_linked_to_genes_matching_AF.py`. Inputs include the index-SNP risk-allele frequency table, an external gene-linked null SNP table with `chr`, `pos` and `ALT_AF`, an indexed Allentoft VCF for that set, and GWAS data for excluding associated SNPs. Outputs are per-trait `Null_PRS_*.tsv` tables.
-3. `merge_null_PRS_cluster.sh` combines per-trait products into `processed_df/Null_PRS_1000replicates_allentoft_SNPs_50Kb_togenes_<cluster>.tsv`.
-4. `02.*Launch_weighted_tau_distribution*` calls `From_null_PRS_to_weighted_tau_distribution.py`, using the combined null PRS, sample metadata and observed permutation-test tau logs. Outputs are weighted-tau distributions and comparison logs.
+1. `00.*Launch_add_EUR_AF*` calls [Add_EUR_AF_from_1000G_ph3_hg19_using_SNP_dict_target_trait.py](scripts_null_distribution_linked_SNPs/python_scripts/Add_EUR_AF_from_1000G_ph3_hg19_using_SNP_dict_target_trait.py), using SNP dictionaries and 1000G annotations to produce `SNPs_*_indpMarkers_with_EUR_AF_risk_alleles.tsv`. A separate cluster-1 negative-control annotation launcher is included; a complete downstream negative-control simulation sequence is not supplied.
+2. `01.*Launch_null_PRS*` calls [Null_distribution_PRS_SNPs_linked_to_genes_matching_AF.py](scripts_null_distribution_linked_SNPs/python_scripts/Null_distribution_PRS_SNPs_linked_to_genes_matching_AF.py). Inputs include the index-SNP risk-allele frequency table, an external gene-linked null SNP table with `chr`, `pos` and `ALT_AF`, an indexed Allentoft VCF for that set, and GWAS data for excluding associated SNPs. Outputs are per-trait `Null_PRS_*.tsv` tables.
+3. [merge_null_PRS_cluster.sh](scripts_null_distribution_linked_SNPs/merge_null_PRS_cluster.sh) combines per-trait products into `processed_df/Null_PRS_1000replicates_allentoft_SNPs_50Kb_togenes_<cluster>.tsv`.
+4. `02.*Launch_weighted_tau_distribution*` calls [From_null_PRS_to_weighted_tau_distribution.py](scripts_null_distribution_linked_SNPs/python_scripts/From_null_PRS_to_weighted_tau_distribution.py), using the combined null PRS, sample metadata and observed permutation-test tau logs. Outputs are weighted-tau distributions and comparison logs.
 
 For each trait, matching targets the empirical distribution of European risk-allele frequencies across its ascertained index SNPs. The entry point supplies the full table of individual `Risk_allele_AF` values to the internal matching function, rather than a single mean frequency. The matching implementation is omitted; exact matching behavior cannot be verified from this release alone. The historical argument name `--prototype_SNPs_file` refers to this index-SNP frequency table.
 
