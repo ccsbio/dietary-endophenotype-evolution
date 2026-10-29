@@ -15,7 +15,7 @@ Arm_fat_mass_left_23124_irnt_UKB
 Trunk_fat_mas_23128_irnt_UKB
 Added_salt_diet_habit_NatCom_2020
 Alcohol_diet_habit_NatCom_2020
-F-highly_Palatable_food_liking_NatGen_2022
+F-highly_Palatable_food_liking_NatCom_2022
 Liver_FA_NatCom_2021
 LST_NatGen_2022
 TSH_NatCom_2020

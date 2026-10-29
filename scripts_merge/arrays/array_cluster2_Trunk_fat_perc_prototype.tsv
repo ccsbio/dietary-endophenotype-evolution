@@ -16,7 +16,7 @@ filename	pheno	build	path
 23128_irnt.gwas.imputed_v3.both_sexes_parsed_coords.gz	Trunk_fat_mas_23128_irnt_UKB	hg19	/mnt/lustre/scratch/nlsas/home/csic/gpo/olg/ccs/DATA/GWAS_data_diet/UKB/UKB_Anthropometric_pheno/parsed_UKB/	
 GCST90133001_buildGRCh37.tsv.gz	Added_salt_diet_habit_NatCom_2020	hg19	/mnt/lustre/scratch/nlsas/home/csic/gpo/olg/ccs/DATA/GWAS_data_diet/Last_candidates_diet/Diet_habits/	
 GCST90132992_buildGRCh37.tsv.gz	Alcohol_diet_habit_NatCom_2020	hg19	/mnt/lustre/scratch/nlsas/home/csic/gpo/olg/ccs/DATA/GWAS_data_diet/Last_candidates_diet/Diet_habits/	
-GCST90094785_buildGRCh37.tsv	F-highly_Palatable_food_liking_NatGen_2022	hg19	/mnt/lustre/scratch/nlsas/home/csic/gpo/olg/ccs/DATA/GWAS_data_diet/Last_candidates_diet/Food_liking/	
+GCST90094785_buildGRCh37.tsv	F-highly_Palatable_food_liking_NatCom_2022	hg19	/mnt/lustre/scratch/nlsas/home/csic/gpo/olg/ccs/DATA/GWAS_data_diet/Last_candidates_diet/Food_liking/	
 GCST90013406_buildGRCh37.tsv	Liver_FA_NatCom_2021	hg19	/mnt/lustre/scratch/nlsas/home/csic/gpo/olg/ccs/DATA/GWAS_data_diet/Liver/	
 GCST90104339_buildGRCh37.tsv	LST_NatGen_2022	hg19	/mnt/lustre/scratch/nlsas/home/csic/gpo/olg/ccs/DATA/GWAS_data_diet/Physical_activity/	
 2020_Zhou_et_al_TSH_meta_HUNT-MGI-ThyroidOmics.txt	TSH_NatCom_2020	hg19	/mnt/lustre/scratch/nlsas/home/csic/gpo/olg/ccs/DATA/GWAS_data_diet/Metabolites/	

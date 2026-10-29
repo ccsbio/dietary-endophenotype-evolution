@@ -8,6 +8,8 @@ Carla Casanova-Suarez, Karen Hardy and Oscar Lao.
 
 Prepared for scientific review.
 
+Preprint (bioRxiv): [10.64898/2026.10.27.762183](https://doi.org/10.64898/2026.10.27.762183).
+
 ## Release status and scope
 
 This independent publication repository contains selected scripts from the computational pipeline executed on the CESGA high-performance computing cluster. It documents the cluster analyses, their configured parameters, and their input/output relationships. Some intermediate files and results were subsequently processed locally in R; those local workflows are outside the present release.
@@ -61,20 +63,20 @@ Solid arrows summarize configured analytical dependencies. Dashed arrows mark pr
 flowchart TD
     GWAS[GWAS acquisition and coordinate preparation] --> LDSC[LDSC annotation, munging and pairwise regression]
     LDSC -. MDS preparation outside this release .-> GA[GA trait clustering using k-medoids]
-    GA -. Final cluster selection and specification .-> MERGE[Cluster-specific GWAS merging]
+    GA -. Cluster post-refinement and specification .-> MERGE[Cluster-specific GWAS merging]
     GWAS --> MERGE
     MERGE --> BED[Cluster SNP BED files]
     BED --> ADNA[Allentoft VCF subsets]
     BED -. BED staging .-> KG[1000 Genomes VCF subsets and EUR processing]
     BED -. BED staging .-> VIND[Vindija VCF subsets]
-    ADNA --> ASC[Allele matching, clumping and SNP dictionaries]
+    ADNA --> ASC[Allele matching, within-cluster trait-specific SNP selection, clumping and dictionaries]
     KG --> ASC
     MERGE --> ASC
     ASC --> TEMP[Risk-allele proportions and temporal permutation tests]
     TEMP -. Multiple-testing processing outside this release .-> SEL[Included BH-labelled trait selections]
-    ASC --> AF[Prototype risk-allele frequencies]
+    ASC --> AF[Index SNP risk-allele frequency distribution]
     KG --> AF
-    AF --> NULL[Frequency-matched gene-linked null PRS]
+    AF --> NULL[Gene-linked null PRS matched to the frequency distribution]
     EXT[External gene-linked SNP set and Allentoft VCF] --> NULL
     SEL --> NULL
     NULL --> NTAU[Aggregation and weighted tau from null PRS]
@@ -118,7 +120,7 @@ The analysis uses hg19/GRCh37 coordinates. The author confirms that two GWAS wer
 
 The current k-medoids/interval configuration has not been executed or validated against manuscript outputs as part of repository preparation.
 
-The selected four-cluster GWAS specifications are supplied in the merging component. The conversion from clustering results to these specifications is not implemented by an included script.
+The four-cluster GWAS specifications supplied in the merging component reflect the post-refinement assignments confirmed by the author. In particular, `DHA_BioPsych_2023` was reassigned from cluster 4 to cluster 3 during post-refinement; the supplied merging and downstream ascertainment arrays use cluster 3. The conversion from initial clustering results to these refined specifications is not implemented by an included script.
 
 ### 3. Cluster-specific GWAS merging
 
@@ -126,7 +128,7 @@ The four `01.*Launch_outer_merge*` launchers in [scripts_merge](scripts_merge/) 
 
 The merge threshold is `1e-03`. This broader threshold was used to retain more data in the initial intermediate files, allowing the downstream analysis threshold to be changed without rebuilding those files. It is not the association threshold used for the final SNP ascertainment analysis, which is `1e-05`. The custom merge call enables INDEL filtering and restricts variants to autosomal, biallelic sites. Outputs are `Merged_GWAS_meta_analyses_Diet_*_outer_pval_1e-03.tsv.gz`, with additional `_dup_filt.tsv.gz` products written only under the duplicate-handling condition in the code. Some downstream steps explicitly reference those conditional products.
 
-The configured groups use logTG, trunk fat percentage, total cholesterol and trunk fat-free mass prototype labels. The historical string `Trunk_dat_free_prot` is retained in some paths and output names; these literal names are part of the file interfaces.
+The configured groups use labels based on logTG, trunk fat percentage, total cholesterol and trunk fat-free mass. The historical string `Trunk_dat_free_prot` is retained in some paths and output names; these literal names are part of the file interfaces.
 
 ### 4. Ancient and present-day VCF processing
 
@@ -151,11 +153,13 @@ The sequence in [scripts_SNP_ascertainment](scripts_SNP_ascertainment/) is:
 | `00.*` | GWAS-to-Allentoft matching: `Merging_and_fixing_alleles_GWAS_to_Allentoft.py` | Matched GWAS tables |
 | `01.*` | 1000G matching: `Merging_alleles_GWAS_1000G_data_fix_VCF.py` | Updated GWAS tables with 1000G identifiers and filtered/sorted VCFs |
 | `02.*` | PLINK binary-file preparation | `.bed`, `.bim` and `.fam` files |
-| `03.*.02` | Trait-specific association files: [Create_assoc_file_merged_GWAS_by_trait_for_clumping_with_plink_and_1000G_data.py](scripts_SNP_ascertainment/python_scripts/Create_assoc_file_merged_GWAS_by_trait_for_clumping_with_plink_and_1000G_data.py) | `.assoc` files for uniquely associated SNPs within the supplied merged trait set |
+| `03.*.02` | Within-cluster trait-specific SNP selection and association-file creation: [Create_assoc_file_merged_GWAS_by_trait_for_clumping_with_plink_and_1000G_data.py](scripts_SNP_ascertainment/python_scripts/Create_assoc_file_merged_GWAS_by_trait_for_clumping_with_plink_and_1000G_data.py) | `.assoc` files containing SNPs uniquely associated with the target trait within its cluster at `1e-05` |
 | `04.*.02` | PLINK clumping | Parsed `.clumped` files |
-| `05.*` | `SNP_ascertainment_from_PLINK_clumping_and_fixed_GWAS_with_Allentoft_aDNA_by_trait_from_merge.py` | `.pkl` dictionaries of prototype SNPs and linked candidates, plus ascertainment logs |
+| `05.*` | `SNP_ascertainment_from_PLINK_clumping_and_fixed_GWAS_with_Allentoft_aDNA_by_trait_from_merge.py` | `.pkl` dictionaries of index SNPs and linked candidates, plus ascertainment logs |
 
-The `.assoc` generation step identifies SNPs uniquely associated with each target trait within the supplied merged trait set, applying the analysis threshold of `1e-05`. Uniqueness is therefore assessed at the analysis threshold, rather than inherited from the broader `1e-03` intermediate selection. Clumping and dictionary creation also use `1e-05`. References to `1e-03` in these launchers identify upstream merged GWAS/VCF products retained for threshold flexibility; the downstream association threshold remains `1e-05`.
+The unique-SNP selection occurs in `Create_assoc_file_merged_GWAS_by_trait_for_clumping_with_plink_and_1000G_data.py`, before LD clumping. It extracts the p-value columns from the cluster-specific merged GWAS dataframe and calls the internal `number_of_unique_SNPs_associated_by_trait_and_pval_threshold` function. As clarified by the author, SNPs are selected for association with the target trait at `p < 1e-05` without association at that threshold with another trait in the same cluster dataframe. These represent **trait-specific within-cluster components**; uniqueness is assessed relative to the other traits in that cluster, not across all traits in the study. The internal selection function is not included in this release.
+
+Uniqueness is assessed at the analysis threshold, rather than inherited from the broader `1e-03` intermediate selection. Clumping and dictionary creation also use `1e-05`. References to `1e-03` in these launchers identify upstream merged GWAS/VCF products retained for threshold flexibility; the downstream association threshold remains `1e-05`. Here, index SNPs refers to the ascertained independent markers represented by the SNP-dictionary keys, distinct from the traits representing clusters in trait clustering.
 
 Clumping uses `--clump-p1 1e-05`, `--clump-p2 1e-05`, `--clump-r2 0.2`, `--clump-kb 500` and `--geno 0.8`. Dictionary creation supplies [complex_LD_regions_hg19_chr.tsv](scripts_SNP_ascertainment/complex_LD_regions_hg19_chr.tsv) to the internal QC function. The region table includes `chr`, `start`, `end` and `annotation`; its filtering implementation is in the omitted module.
 
@@ -182,9 +186,11 @@ The supplied BH-labelled selections in subsequent components identify configured
 [scripts_null_distribution_linked_SNPs](scripts_null_distribution_linked_SNPs/) contains:
 
 1. `00.*Launch_add_EUR_AF*` calls `Add_EUR_AF_from_1000G_ph3_hg19_using_SNP_dict_target_trait.py`, using SNP dictionaries and 1000G annotations to produce `SNPs_*_indpMarkers_with_EUR_AF_risk_alleles.tsv`. A separate cluster-1 negative-control annotation launcher is included; a complete downstream negative-control simulation sequence is not supplied.
-2. `01.*Launch_null_PRS*` calls `Null_distribution_PRS_SNPs_linked_to_genes_matching_AF.py`. Inputs include prototype frequencies, an external gene-linked null SNP table with `chr`, `pos` and `ALT_AF`, an indexed Allentoft VCF for that set, and GWAS data for excluding associated SNPs. Outputs are per-trait `Null_PRS_*.tsv` tables.
+2. `01.*Launch_null_PRS*` calls `Null_distribution_PRS_SNPs_linked_to_genes_matching_AF.py`. Inputs include the index-SNP risk-allele frequency table, an external gene-linked null SNP table with `chr`, `pos` and `ALT_AF`, an indexed Allentoft VCF for that set, and GWAS data for excluding associated SNPs. Outputs are per-trait `Null_PRS_*.tsv` tables.
 3. `merge_null_PRS_cluster.sh` combines per-trait products into `processed_df/Null_PRS_1000replicates_allentoft_SNPs_50Kb_togenes_<cluster>.tsv`.
 4. `02.*Launch_weighted_tau_distribution*` calls `From_null_PRS_to_weighted_tau_distribution.py`, using the combined null PRS, sample metadata and observed permutation-test tau logs. Outputs are weighted-tau distributions and comparison logs.
+
+For each trait, matching targets the empirical distribution of European risk-allele frequencies across its ascertained index SNPs. The entry point supplies the full table of individual `Risk_allele_AF` values to the internal matching function, rather than a single mean frequency. The matching implementation is omitted; exact matching behavior cannot be verified from this release alone. The historical argument name `--prototype_SNPs_file` refers to this index-SNP frequency table.
 
 The simulation launchers configure 1,000 replicates, seed `1234`, AF span `0.05`, and exclusion of target-trait-associated SNPs at `1e-05`. The null set is described by filenames and interfaces as SNPs within 50 kb of protein-coding genes. Construction of that set and its VCF is outside this release. The weighted-tau step uses the temporal bin and outlier arguments described above.
 
@@ -258,6 +264,23 @@ SLURM requests range from `--mem=10000` to `--mem=150000`, with walltimes from o
 
 Included specifications comprise GWAS merging/LDSC arrays, SNP-ascertainment trait lists, temporal-analysis arrays, downstream significant-trait arrays, the Allentoft cluster-to-BED array, complex-LD-region annotations, and the Vindija chromosome/contig support files.
 
+### Trait ID annotation alignment
+
+Journal/year annotations in the supplied arrays were checked against the `Trait ID` column of the author-provided `Diet_manuscript_supplementary_tables_1_2_3.xlsx`, sheet `Sup Table 1 - GWAS`. That workbook is not distributed in this repository. The following annotation corrections were applied consistently to GWAS merge phenotype labels, ascertainment trait lists, LDSC derived-file references, and downstream dictionary/trait references wherever they occurred:
+
+| Earlier label | Corrected Trait ID | Supplementary Table 1 cell |
+| --- | --- | --- |
+| `F-Acquired_food_liking_NatGen_2022` | `F-Acquired_food_liking_NatCom_2022` | B39 |
+| `F-savory_food_liking_NatGen_2022` | `F-savory_food_liking_NatCom_2022` | B40 |
+| `F-highly_Palatable_food_liking_NatGen_2022` | `F-highly_Palatable_food_liking_NatCom_2022` | B41 |
+| `F-vegetarian_food_liking_NatGen_2022` | `F-vegetarian_food_liking_NatCom_2022` | B42 |
+| `eBMD_NatGen_2027` | `eBMD_NatGen_2017` | B36 |
+| `Prop_carb_NatHumBeha_2023` | `Prop_carb_NatHumBeha_2022` | B18 |
+| `Prop_fat_NatHumBeha_2023` | `Prop_fat_NatHumBeha_2022` | B19 |
+| `Prop_protein_NatHumBeha_2023` | `Prop_protein_NatHumBeha_2022` | B20 |
+
+These edits preserve array row order, trait-name structure, marker counts, raw source filenames, thresholds and analytical code. A shortened identifier that omits the year is not treated as an error solely for that omission. Historical external artifacts may still use earlier labels in `.pkl`/derived filenames, merged-GWAS column suffixes or result metadata. They require a coordinated identifier migration before use with the corrected arrays; changing a filename alone does not update labels stored within a file. No external datasets, dictionaries or results were renamed or modified during this correction, and execution with those artifacts has not been verified.
+
 The following components are not supplied:
 
 - Internal Python modules `merge_GWAS_phenos`, `work_vegeta` and `ancient_vegeta`, imported from the configured `vegeta_last_version` installation.
@@ -284,4 +307,4 @@ These omissions must not be interpreted as instructions to recreate internal met
 
 Requests for consideration of additional material should identify the relevant analytical component and files through the manuscript's editorial correspondence. This repository does not establish authorization to release the omitted internal modules, R functions, datasets, metadata or result files. Any provision would require confirmation by the authors of ownership, applicable sharing restrictions and specific release authorization. No availability-on-request commitment is made by this provisional release.
 
-Please cite the manuscript when referring to these analyses. This provisional README supplies no DOI, accession or publication status beyond the manuscript information stated above.
+Please cite the [bioRxiv preprint](https://doi.org/10.64898/2026.10.27.762183) when referring to these analyses.
