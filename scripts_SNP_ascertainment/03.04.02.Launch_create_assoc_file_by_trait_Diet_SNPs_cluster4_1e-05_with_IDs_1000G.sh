@@ -28,7 +28,7 @@ array_file=${wd}/arrays/array_traits_${cluster}.txt
 trait=$(sed -n "${SLURM_ARRAY_TASK_ID}p" ${array_file} | cut -f1)
 
 # Variables
-cluster_name_gwas=Cluster_4_Trunk_dat_free_prot
+cluster_name_gwas=Cluster_4_Trunk_fat_free_prot
 gwas_path=${main}/Diet_project/GWAS_matching_aDNA_data_${pval}pval/
 gwas_file=${gwas_path}Merged_GWAS_meta_analyses_Diet_${cluster_name_gwas}_outer_pval_${pval}_common_and_fixed_Allentoft_aDNA_update1000G.tsv.gz
 out_path=${wd}/assoc_files/${cluster}/

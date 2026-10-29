@@ -34,7 +34,7 @@ pval_threshold=1e-05
 
 
 # Variables
-cluster_name_gwas=Cluster_4_Trunk_dat_free_prot
+cluster_name_gwas=Cluster_4_Trunk_fat_free_prot
 gwas_path=${main}/Diet_project/GWAS_matching_aDNA_data_${pval}pval/
 gwas_file=${gwas_path}Merged_GWAS_meta_analyses_Diet_${cluster_name_gwas}_outer_pval_${pval}_common_and_fixed_Allentoft_aDNA_update1000G.tsv.gz
 plink_clumped=${path_scripts}/clumping/pval${pval_threshold}_LD${ld_threshold}_1000G_EUR_pop/${cluster}/1000G_EUR_Diet_${cluster}_${trait}_${pval_threshold}pval_${ld_threshold}r2_500kb_parsed.clumped

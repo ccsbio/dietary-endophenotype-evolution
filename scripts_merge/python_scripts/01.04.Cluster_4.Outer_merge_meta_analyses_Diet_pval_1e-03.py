@@ -42,7 +42,7 @@ if any(dups):
         # Exclude every row at these positions rather than selecting an allele by row order.
         all_dups = merged_df.duplicated(subset=['chr', 'pos'], keep=False)
         merged_df_filt = merged_df.loc[all_dups == False,:].copy()
-        merged_df_filt.to_csv(path_or_buf=dir_path + 'Merged_GWAS_meta_analyses_Diet_Cluster_4_Trunk_dat_free_prot_outer_pval_1e-03_dup_filt.tsv.gz', header=True, index=False, decimal='.', sep='\t', compression={'method': 'gzip', 'compresslevel': 4})
+        merged_df_filt.to_csv(path_or_buf=dir_path + 'Merged_GWAS_meta_analyses_Diet_Cluster_4_Trunk_fat_free_prot_outer_pval_1e-03_dup_filt.tsv.gz', header=True, index=False, decimal='.', sep='\t', compression={'method': 'gzip', 'compresslevel': 4})
     else:
         print("Warning! 10 or more repeated rows beyond the first occurrence were detected after the outer merge. Review the log and output before proceeding.")
 
@@ -57,4 +57,4 @@ print('Execution time:', elapsed_time, 'seconds')
 
 
 # Write the results
-merged_df.to_csv(path_or_buf=dir_path + 'Merged_GWAS_meta_analyses_Diet_Cluster_4_Trunk_dat_free_prot_outer_pval_1e-03.tsv.gz', header=True, index=False, decimal='.', sep='\t', compression={'method': 'gzip', 'compresslevel': 4})
+merged_df.to_csv(path_or_buf=dir_path + 'Merged_GWAS_meta_analyses_Diet_Cluster_4_Trunk_fat_free_prot_outer_pval_1e-03.tsv.gz', header=True, index=False, decimal='.', sep='\t', compression={'method': 'gzip', 'compresslevel': 4})

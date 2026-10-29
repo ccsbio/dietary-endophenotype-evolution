@@ -20,7 +20,7 @@ conda activate vegeta_last
 main_path=/mnt/lustre/scratch/nlsas//home/csic/gpo/olg/ccs/
 scripts_path=$(pwd)
 pval_threshold=1e-03
-out_dir=${main_path}/Diet_project/merge_GWAS_diet_by_clusters/outer_${pval_threshold}/Cluster_4_Trunk_dat_free_prot/
+out_dir=${main_path}/Diet_project/merge_GWAS_diet_by_clusters/outer_${pval_threshold}/Cluster_4_Trunk_fat_free_prot/
 python_dir=${scripts_path}/python_scripts
 pheno=array_cluster4_Trunk_fat_free_prototype.tsv
 array_path=${scripts_path}/arrays/

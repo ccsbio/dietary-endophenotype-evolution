@@ -82,10 +82,7 @@ flowchart TD
     BED --> ADNA["Allentoft VCF subset<br/>per diet cluster"]
     BED --> KG["1000G VCF subset per diet cluster<br/>and EUR processing"]
     BED --> VIND["Vindija VCF subset<br/>per diet cluster"]
-    subgraph SNP_ASC ["SNP ascertainment"]
-        ASC["Allele matching<br/>Trait-specific SNP selection within cluster<br/>Clumping and SNP dictionaries"]
-    end
-    style SNP_ASC fill:transparent,stroke:none
+    ASC["<b>SNP ascertainment</b><br/>Allele matching<br/>Trait-specific SNP selection within cluster<br/>Clumping and SNP dictionaries"]
     ADNA --> ASC
     KG --> ASC
     MERGE --> ASC
@@ -150,11 +147,13 @@ The four-cluster GWAS specifications supplied in the merging component reflect t
 
 ### 3. Cluster-specific GWAS merging
 
-The four `01.*Launch_outer_merge*` launchers in [scripts_merge](scripts_merge/) call their corresponding Python scripts in `python_scripts/`. Each uses an included specification table in `arrays/`, containing GWAS filenames, phenotype labels, genome builds and original input paths.
+The four `01.*Launch_outer_merge*` launchers in [scripts_merge](scripts_merge/) call their corresponding Python scripts in `python_scripts/`. Each uses an included specification table in `arrays/`, containing GWAS filenames, phenotype labels, genome builds and original input paths. An **outer merge** preserves the union of associated variants across the GWAS in each diet cluster, including both shared variants and variants unique to individual GWAS. Retaining both is essential for downstream SNP ascertainment, which selects variants uniquely associated with each target trait relative to the other traits in its cluster at the analysis threshold of `1e-05`.
 
-The merge threshold is `1e-03`. This broader threshold was used to retain more data in the initial intermediate files, allowing the downstream analysis threshold to be changed without rebuilding those files. It is not the association threshold used for the final SNP ascertainment analysis, which is `1e-05`. The custom merge call enables INDEL filtering and restricts variants to autosomal, biallelic sites. Outputs are `Merged_GWAS_meta_analyses_Diet_*_outer_pval_1e-03.tsv.gz`. Duplicate genomic positions (`chr`, `pos`) are checked as a merge QC step: when one to nine repeated rows are detected, an additional `_dup_filt.tsv.gz` table is written, excluding all rows at the repeated positions. The QC count measures repeated rows beyond the first occurrence; the filtering mask uses `keep=False` to remove every occurrence at those positions. At ten or more repeated rows, the script issues a warning for human review rather than automatically filtering them. After each merge job, inspect the log and output tables before proceeding. The cluster 1 and 2 BED-creation launchers use the duplicate-filtered tables.
+The merge threshold is `1e-03`. This broader threshold was used to retain more data in the initial intermediate files, allowing the downstream analysis threshold to be changed without rebuilding those files. It is not the association threshold used for the final SNP ascertainment analysis, which is `1e-05`. The custom merge call enables INDEL filtering and restricts variants to autosomal, biallelic sites. Outputs are `Merged_GWAS_meta_analyses_Diet_*_outer_pval_1e-03.tsv.gz`.
 
-The configured groups use labels based on logTG, trunk fat percentage, total cholesterol and trunk fat-free mass. The historical string `Trunk_dat_free_prot` is retained in some paths and output names; these literal names are part of the file interfaces.
+Allele harmonization combines information for matching alleles across GWAS. Occasionally, records at the same genomic position can carry different allele pairs, such as A–C and C–T. These records may represent a multiallelic site across datasets or an error in the source data, including a sequencing error; the allele pairs alone do not establish the cause. Because the pairs differ, their information is not combined as the same allelic variant, and the merged table can contain more than one row at that coordinate. Such repeated positions are expected to be rare after the upstream filtering and harmonization; a larger number warrants human review.
+
+Duplicate genomic positions (`chr`, `pos`) are therefore checked as a merge QC step. When one to nine repeated rows beyond the first occurrence are detected, an additional `_dup_filt.tsv.gz` table is written, excluding all rows at the repeated positions. At ten or more repeated rows, the script issues a warning for human review rather than automatically filtering them. After each merge job, inspect the log and output tables before proceeding. The cluster 1 and 2 BED-creation launchers use the duplicate-filtered tables.
 
 ### 4. Ancient and present-day VCF processing
 

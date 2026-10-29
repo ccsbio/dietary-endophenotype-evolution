@@ -38,7 +38,7 @@ echo ${trait_label_merged_GWAS}
 # Variables
 # Trait data
 SNP_dict_path=${HOME}/ccs/Diet_project/scripts_SNP_ascertainment/SNP_dictionaries/${cluster}
-gwas=${in_path}/Diet_project/merge_GWAS_diet_by_clusters/outer_1e-03/Cluster_4_Trunk_dat_free_prot/Merged_GWAS_meta_analyses_Diet_Cluster_4_Trunk_dat_free_prot_outer_pval_1e-03.tsv.gz
+gwas=${in_path}/Diet_project/merge_GWAS_diet_by_clusters/outer_1e-03/Cluster_4_Trunk_fat_free_prot/Merged_GWAS_meta_analyses_Diet_Cluster_4_Trunk_fat_free_prot_outer_pval_1e-03.tsv.gz
 pval_thres=1e-05
 
 # 1000G

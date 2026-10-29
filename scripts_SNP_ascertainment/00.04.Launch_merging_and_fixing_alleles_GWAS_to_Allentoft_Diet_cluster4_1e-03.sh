@@ -23,7 +23,7 @@ path_scripts=$(pwd)
 # Variables
 pval=1e-03
 cluster=cluster4
-cluster_name_gwas=Cluster_4_Trunk_dat_free_prot
+cluster_name_gwas=Cluster_4_Trunk_fat_free_prot
 gwas_file=${in_path}/Diet_project/merge_GWAS_diet_by_clusters/outer_${pval}/${cluster_name_gwas}/Merged_GWAS_meta_analyses_Diet_${cluster_name_gwas}_outer_pval_${pval}.tsv.gz
 vcf_path=${in_path}/Diet_project/aDNA_trend_analysis/Allentoft_VCF_afterQC/outer_merge_pval_${pval}/${cluster}/sorted/
 vcf=Diet_SNPs_${cluster}_${pval}_outer_merge_aDNA_Allentoft_afterQC_all_chr_EUR_samples.sorted.vcf.gz
