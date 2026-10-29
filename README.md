@@ -72,17 +72,21 @@ Solid arrows summarize configured analytical dependencies. Dashed arrows mark pr
 flowchart TD
     GWAS[GWAS acquisition and coordinate preparation] --> LDSC[LDSC annotation, munging and pairwise regression]
     LDSC -. MDS preparation outside this release .-> GA[GA trait clustering using k-medoids]
-    GA -. Cluster post-refinement and specification .-> MERGE[Cluster-specific GWAS merging]
+    GA -. Cluster post-refinement and specification .-> MERGE["GWAS merging and harmonization<br/>per diet cluster"]
     GWAS --> MERGE
-    MERGE --> BED[Cluster SNP BED files]
+    MERGE --> BED[SNP BED files per diet cluster]
     RAWA[Allentoft download] --> QC[QC using the 967-sample EUR list]
     QC --> ADNA
     RAWK[1000 Genomes download and EUR sample list] --> KG
     RAWV[Vindija download] --> VIND
-    BED --> ADNA[Allentoft VCF subsets]
-    BED --> KG[1000 Genomes VCF subsets and EUR processing]
-    BED --> VIND[Vindija VCF subsets]
-    ADNA --> ASC[Allele matching, within-cluster trait-specific SNP selection, clumping and dictionaries]
+    BED --> ADNA["Allentoft VCF subset<br/>per diet cluster"]
+    BED --> KG["1000G VCF subset per diet cluster<br/>and EUR processing"]
+    BED --> VIND["Vindija VCF subset<br/>per diet cluster"]
+    subgraph SNP_ASC ["SNP ascertainment"]
+        ASC["Allele matching<br/>Trait-specific SNP selection within cluster<br/>Clumping and SNP dictionaries"]
+    end
+    style SNP_ASC fill:transparent,stroke:none
+    ADNA --> ASC
     KG --> ASC
     MERGE --> ASC
     ASC --> TEMP[Risk-allele proportions and temporal permutation tests]
@@ -163,7 +167,7 @@ The configured groups use labels based on logTG, trunk fat percentage, total cho
 | 1000 Genomes download | [Download_hg37_vcf_phase3_chr1-22.sh](Download_human_variation_data_1000G_phase3_hg19/Download_hg37_vcf_phase3_chr1-22.sh) | Downloads the 22 Phase 3 autosomal VCFs from release `20130502` and the population panel to `DATA/1000G_human_variation_phase3/VCFs_1000G_phase3_hg19/` |
 | Vindija download | [00.01.Download_Vindija_chr1-22_VCF.sh](Download_archaic_genomes/00.01.Download_Vindija_chr1-22_VCF.sh) | Downloads the 22 `Vindija33.19/chr*_mq25_mapab100.vcf.gz` files and source README to `DATA/Archaic_genomes/Neanderthal/Vindija/` |
 
-The Allentoft QC command selects samples with `bcftools view -S`, applies `MAF >= 0.01 & INFO >= 0.8`, and passes the result through `bcftools +setGT` with `-t q -n . -e 'GP[*] >= 0.8'`. SNPs from both the 1000G MASK and the 1240K array are retained, subject to these QC criteria; this step does not restrict the input to one of the two sets. The script describes the data as diploid but contains no separate ploidy-selection command. The original imputation workflow is not included.
+The Allentoft QC command selects samples with `bcftools view -S`, applies `MAF >= 0.01 & INFO >= 0.8`, and passes the result through `bcftools +setGT` with `-t q -n . -e 'GP[*] >= 0.8'`. SNPs from both the 1000G MASK and the 1240K array are retained, subject to these QC criteria; this step does not restrict the input to one of the two sets. The input VCFs contain genotypes already imputed with GLIMPSE from Allentoft et al. (2024), [Population genomics of post-glacial western Eurasia](https://www.nature.com/articles/s41586-023-06865-0).
 
 The initial European subset used for Allentoft QC contains 967 samples, including five from the Canary Islands, and is specified by [Sample_file_967_aDNA_EUR_ok.txt](Allentoft_aDNA/sample_files/Sample_file_967_aDNA_EUR_ok.txt). **Canary Islands samples are excluded from downstream temporal analyses through the 946-sample metadata table described below.** This later selection also restricts the analysis to the 400-15,000-year BP interval. The QC sample list and the downstream analysis metadata therefore serve different stages.
 
