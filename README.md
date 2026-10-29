@@ -6,7 +6,7 @@ Code supporting the manuscript:
 
 Carla Casanova-Suarez, Karen Hardy and Oscar Lao.
 
-Prepared for scientific review at *Nature Human Behaviour*.
+Prepared for scientific review.
 
 ## Release status and scope
 
