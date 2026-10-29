@@ -7,7 +7,7 @@
 #SBATCH --output=/home/csic/gpo/olg/ccs/Diet_project/scripts_GA_geo_trend/out/01.01.Tournament.launch_GA_geographic_trend_split_Diet_cluster1_100iter_200pop_0_2MR_5tournament_size_%A_%a.out
 #SBATCH --mem=20000
 #SBATCH --time=05:00:00
-#SBATCH --array=1-2
+#SBATCH --array=1-3
 
 # Load R
 

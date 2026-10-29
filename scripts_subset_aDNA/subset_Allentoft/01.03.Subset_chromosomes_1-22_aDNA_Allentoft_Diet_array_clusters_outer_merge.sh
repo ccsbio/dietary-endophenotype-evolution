@@ -6,7 +6,7 @@
 #SBATCH --output=/home/csic/gpo/olg/ccs/Diet_project/scripts_subset_aDNA/subset_Allentoft/out/01.03.Subset_chromosomes_1-22_aDNA_Allentoft_Diet_array_clusters_outer_merge_%A_%a.out
 #SBATCH --mem=10000
 #SBATCH --time=04:00:00
-#SBATCH --array=2-4
+#SBATCH --array=1-4
 
 # Load modules
 

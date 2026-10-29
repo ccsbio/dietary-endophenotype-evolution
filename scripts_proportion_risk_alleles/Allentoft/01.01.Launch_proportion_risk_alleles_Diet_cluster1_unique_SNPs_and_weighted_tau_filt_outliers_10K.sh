@@ -6,7 +6,7 @@
 #SBATCH --output=/home/csic/gpo/olg/ccs/Diet_project/scripts_proportion_risk_alleles/Allentoft/out/01.01.Launch_proportion_risk_alleles_Diet_cluster1_unique_SNPs_and_weighted_tau_filt_outliers_10K_%A_%a.out
 #SBATCH --mem=40000
 #SBATCH --time=04:00:00
-#SBATCH --array=3-9
+#SBATCH --array=1-9
 
 # Load conda
 

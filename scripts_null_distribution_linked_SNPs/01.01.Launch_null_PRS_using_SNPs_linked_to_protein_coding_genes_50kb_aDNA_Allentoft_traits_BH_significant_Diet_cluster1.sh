@@ -7,7 +7,7 @@
 #SBATCH --output=/home/csic/gpo/olg/ccs/Diet_project/scripts_null_distribution_linked_SNPs/out/01.01.Launch_null_PRS_using_SNPs_linked_to_protein_coding_genes_50kb_aDNA_Allentoft_traits_BH_significant_Diet_cluster1_%A_%a.out
 #SBATCH --mem=60000
 #SBATCH --time=05:00:00
-#SBATCH --array=1,3
+#SBATCH --array=1-3
 
 # Load conda
 

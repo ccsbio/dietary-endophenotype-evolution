@@ -6,7 +6,7 @@
 #SBATCH --output=/home/csic/gpo/olg/ccs/Diet_project/scripts_null_distribution_linked_SNPs/out/00.01.Launch_add_EUR_AF_risk_allele_prototypes_traits_negative_control_Diet_cluster1_%A_%a.out
 #SBATCH --mem=20000
 #SBATCH --time=05:00:00
-#SBATCH --array=2
+#SBATCH --array=1-9
 
 # Load conda
 

@@ -6,7 +6,7 @@
 #SBATCH --output=/home/csic/gpo/olg/ccs/Diet_project/scripts_selective_pressures_archaics/out/01.03.Launch_Fisher_test_homo_vs_AMH_lineages_Vindija_traits_significant_Diet_cluster3_%A_%a.out
 #SBATCH --mem=15000
 #SBATCH --time=04:00:00
-#SBATCH --array=4
+#SBATCH --array=1-7
 
 # Load conda
 

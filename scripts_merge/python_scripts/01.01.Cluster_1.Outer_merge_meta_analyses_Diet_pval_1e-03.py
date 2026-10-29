@@ -37,11 +37,14 @@ if any(dups):
     n_dups = dups.value_counts()[True]
     if n_dups <10:
         print("Warning! additional merged file will be saved in the same out directory, because automatic filtering is performed.")
-        print("There are %d genomic regions duplicated after filtering. The first row is kept." % (n_dups))
-        merged_df_filt = merged_df.loc[dups == False,:].copy()
+        print("There are %d repeated rows beyond the first occurrence at genomic positions. All rows at these positions are removed." % (n_dups))
+        # Repeated coordinates may represent different alleles at a multiallelic site or an input error.
+        # Exclude every row at these positions rather than selecting an allele by row order.
+        all_dups = merged_df.duplicated(subset=['chr', 'pos'], keep=False)
+        merged_df_filt = merged_df.loc[all_dups == False,:].copy()
         merged_df_filt.to_csv(path_or_buf=dir_path + 'Merged_GWAS_meta_analyses_Diet_Cluster_1_logTG_prot_outer_pval_1e-03_dup_filt.tsv.gz', header=True, index=False, decimal='.', sep='\t', compression={'method': 'gzip', 'compresslevel': 4})
     else:
-        print("Warning! more than 10 genomic regions are duplicated after the outer merge. Please, check it out.")
+        print("Warning! 10 or more repeated rows beyond the first occurrence were detected after the outer merge. Review the log and output before proceeding.")
 
 # get the end time
 et = time.time()

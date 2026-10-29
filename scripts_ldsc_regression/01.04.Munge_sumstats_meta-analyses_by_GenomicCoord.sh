@@ -6,7 +6,7 @@
 #SBATCH --output=/home/csic/gpo/olg/ccs/Diet_project/scripts_ldsc_regression/out/01.04.Munge_sumstats_meta-analyses_by_GenomicCoord_%A_%a.out
 #SBATCH --mem=20000
 #SBATCH --time=04:00:00
-#SBATCH --array=22
+#SBATCH --array=1-39
 
 
 # Libraries

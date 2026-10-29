@@ -80,8 +80,8 @@ flowchart TD
     RAWK[1000 Genomes download and EUR sample list] --> KG
     RAWV[Vindija download] --> VIND
     BED --> ADNA[Allentoft VCF subsets]
-    BED -. BED staging .-> KG[1000 Genomes VCF subsets and EUR processing]
-    BED -. BED staging .-> VIND[Vindija VCF subsets]
+    BED --> KG[1000 Genomes VCF subsets and EUR processing]
+    BED --> VIND[Vindija VCF subsets]
     ADNA --> ASC[Allele matching, within-cluster trait-specific SNP selection, clumping and dictionaries]
     KG --> ASC
     MERGE --> ASC
@@ -148,7 +148,7 @@ The four-cluster GWAS specifications supplied in the merging component reflect t
 
 The four `01.*Launch_outer_merge*` launchers in [scripts_merge](scripts_merge/) call their corresponding Python scripts in `python_scripts/`. Each uses an included specification table in `arrays/`, containing GWAS filenames, phenotype labels, genome builds and original input paths.
 
-The merge threshold is `1e-03`. This broader threshold was used to retain more data in the initial intermediate files, allowing the downstream analysis threshold to be changed without rebuilding those files. It is not the association threshold used for the final SNP ascertainment analysis, which is `1e-05`. The custom merge call enables INDEL filtering and restricts variants to autosomal, biallelic sites. Outputs are `Merged_GWAS_meta_analyses_Diet_*_outer_pval_1e-03.tsv.gz`, with additional `_dup_filt.tsv.gz` products written only under the duplicate-handling condition in the code. Some downstream steps explicitly reference those conditional products.
+The merge threshold is `1e-03`. This broader threshold was used to retain more data in the initial intermediate files, allowing the downstream analysis threshold to be changed without rebuilding those files. It is not the association threshold used for the final SNP ascertainment analysis, which is `1e-05`. The custom merge call enables INDEL filtering and restricts variants to autosomal, biallelic sites. Outputs are `Merged_GWAS_meta_analyses_Diet_*_outer_pval_1e-03.tsv.gz`. Duplicate genomic positions (`chr`, `pos`) are checked as a merge QC step: when one to nine repeated rows are detected, an additional `_dup_filt.tsv.gz` table is written, excluding all rows at the repeated positions. The QC count measures repeated rows beyond the first occurrence; the filtering mask uses `keep=False` to remove every occurrence at those positions. At ten or more repeated rows, the script issues a warning for human review rather than automatically filtering them. After each merge job, inspect the log and output tables before proceeding. The cluster 1 and 2 BED-creation launchers use the duplicate-filtered tables.
 
 The configured groups use labels based on logTG, trunk fat percentage, total cholesterol and trunk fat-free mass. The historical string `Trunk_dat_free_prot` is retained in some paths and output names; these literal names are part of the file interfaces.
 
@@ -181,7 +181,9 @@ The branches operate on autosomal chromosome files, 1 through 22:
 
 The cluster-specific Allentoft scripts consume the QC outputs described above, whose filenames include `EUR_967samples_diploid_INFO_0.8_MAF_0.01_GP_0.8_missing`.
 
-BED creation is included under the Allentoft component. The 1000G and Vindija launchers expect BED files in their own configured directories; copying/staging these products across components is not automated here.
+Allentoft subsetting is performed first. The cluster BED files, `SNPs_diet_cluster1_outer_merge_1e-03pval.bed` through `SNPs_diet_cluster4_outer_merge_1e-03pval.bed`, are generated in the Allentoft component under `scripts_subset_aDNA/subset_Allentoft/SNP_files/outer_merge_1e-03/`. These same BED files are then shared with the 1000G and Vindija subsetting steps to use a common genomic-position selection across datasets; separate SNP selections are not generated for those branches. Their configured BED locations are `scripts_subset_1000G/SNP_files/outer_merge_1e-03/` and `scripts_subset_vcf_archaics/bedfiles/outer_merge_1e-03/`, respectively.
+
+The initial GWAS-to-Allentoft matching launchers use the concatenated VCFs under each cluster's `sorted/` directory, with the suffix `all_chr_EUR_samples.sorted.vcf.gz`, as do the risk-allele proportion analyses.
 
 ### 5. Allele matching and SNP ascertainment
 
@@ -336,10 +338,9 @@ These omissions must not be interpreted as instructions to recreate internal met
 1. **External arrays:** six UKB lists referenced by LDSC are absent: `array_UKB_Anthropometric.txt`, `array_UKB_Metabolic.txt`, `array_UKB_Psychiatric.txt`, and their corresponding `_with_rsID.txt` lists. Four coordinate-parser lists are also absent: `array_parse_UKB_Ant.txt`, `array_parse_UKB_Met.txt`, `array_parse_UKB_Psyc.txt` and `array_parser_diet_composition.tsv`. Launchers point to their original CESGA data locations.
 2. **Support files and staging:** `ldsc_rsID_with_coords_list.tsv` is referenced by LDSC annotation scripts but not distributed. `chromosomes.txt` is included under `scripts_subset_vcf_archaics/` and the gene-linked Allentoft branch, but is absent at the separate paths expected by the cluster-specific Allentoft and 1000G sorting launchers. The included `EUR.samples.txt` must be staged in the configured 1000G data directory; the null weighted-tau launchers also expect a separate component-local copy of the supplied temporal metadata. Final gene-linked SNP BED and EUR frequency tables remain unavailable.
 3. **Original path assumptions:** absolute CESGA code, input, scratch, output and log locations remain in the scripts, along with `$HOME`, `$LUSTRE` and working-directory assumptions. Folder placement in this repository does not recreate those locations.
-4. **Unverified file handoffs:** Allentoft concatenation produces a `.sorted.vcf.gz` under `sorted/`, while initial GWAS-to-Allentoft matching references a differently located VCF without that suffix. The original staging relationship has not been established. Conditional `_dup_filt` outputs and BED staging also require the corresponding original products and provenance.
-5. **Job selection and orchestration:** some launchers retain partial or nonconsecutive SLURM array selections. They should not be interpreted as complete records of every original submission. There is no master dependency-aware submission script. Array row order controls trait/job selection; it is part of the interface.
-6. **Incomplete methodological visibility:** core calculations depend on omitted functions. The visible entry points and parameters do not establish the complete algorithms, multiple-testing family, allele-handling behavior or geographic GA implementation.
-7. **Validation status:** repository preparation has used static inspection and file/reference checks. No cluster analysis or comparison against manuscript outputs has been performed as part of preparing this release. Passing documentation checks would not demonstrate scientific reproduction.
+4. **Job arrays and orchestration:** launchers whose array files are included cover all rows, from 1 to the number of entries. Maximum indices for absent external arrays cannot be verified from this release. Array row order controls trait/job selection and is part of the interface. There is no master dependency-aware submission script.
+5. **Incomplete methodological visibility:** core calculations depend on omitted functions. The visible entry points and parameters do not establish the complete algorithms, multiple-testing family, allele-handling behavior or geographic GA implementation.
+6. **Validation status:** repository preparation has used static inspection and file/reference checks. No cluster analysis or comparison against manuscript outputs has been performed as part of preparing this release. Passing documentation checks would not demonstrate scientific reproduction.
 
 ## Editorial review and additional material
 
